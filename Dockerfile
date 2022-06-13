@@ -54,7 +54,6 @@ RUN chmod +x /etc/service/apache2/run && \
 	a2dissite 000-default && a2disconf php-horde
 
 RUN mkdir -p /etc/apache2/scripts
-ADD proxy_client_ip.php /etc/apache2/scripts/proxy_client_ip.php
 
 ADD apache-horde.conf /etc/apache2/sites-available/horde.conf
 RUN a2ensite horde
