@@ -27,11 +27,6 @@ Enter `horde-db-migrate` into an interactive shell on first run if you need a da
 -e DB_DRIVER=mysqli
 ```
 
-### Disable test.php of horde by setting this to true
-```
--e HORDE_TEST_DISABLE=false
-```
-
 ### Volume expects each application to be in a seperate dierction
 ```
 -v /path/to/horde/storage:/etc/horde
