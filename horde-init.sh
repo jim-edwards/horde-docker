@@ -53,8 +53,5 @@ else
 	fi
 fi
 
-sed -i "s/^\(.*use_ssl.*=\)\(.*\);/\1 0;/g" /etc/horde/horde/conf.php
-sed -i "s/^\(.*testdisable.*=\)\(.*\);/\1 $HORDE_TEST_DISABLE;/g" /etc/horde/horde/conf.php
-
 # Fix file/dir permissions 
 chown -R www-data:www-data /var/cache/horde/
