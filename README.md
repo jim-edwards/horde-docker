@@ -47,6 +47,19 @@ docker exec -it -u www-data ts_horde horde-db-migrate
 Horde must be reached through a hostname that contains a dot (e.g. `horde.example.com`, or `horde.localhost` for
 testing). Horde 6 refuses to set its session cookie for single-label names such as plain `localhost`.
 
+### Behind an HTTPS reverse proxy
+
+Pass the original host name and scheme through, otherwise Horde builds `http://` or wrong-host links to its
+stylesheets and the page shows up unstyled. Apache (needs `mod_headers`):
+```
+ProxyPreserveHost On
+RequestHeader set X-Forwarded-Proto "https"
+ProxyPass / http://127.0.0.1:8080/
+ProxyPassReverse / http://127.0.0.1:8080/
+```
+nginx: `proxy_set_header Host $host;` and `proxy_set_header X-Forwarded-Proto $scheme;`. Alternatively set
+`$conf['use_ssl'] = 1;` in `horde/conf.php` to always generate https links.
+
 The base application is served at `/horde/` (requests to `/` are forwarded there) and the other applications at
 `/imp/`, `/kronolith/`, `/turba/` and so on. ActiveSync and Autodiscover are still answered at
 `/Microsoft-Server-ActiveSync` and `/autodiscover/autodiscover.xml`.
