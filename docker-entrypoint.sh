@@ -1,6 +1,7 @@
 #! /bin/sh
 #
 # Docker entrypoint script to change UID/GID of Debian/Ubuntu Apache
+# and prepare Horde before starting Apache
 #
 set -eu
 
@@ -13,4 +14,7 @@ set -eu
 [ -n "${APACHE_UID:-}" ] && {
   usermod --uid $APACHE_UID www-data
 }
+
+[ "$1" = 'apache2-foreground' ] && /usr/local/bin/horde-init.sh
+
 exec "$@"

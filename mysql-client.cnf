@@ -1,0 +1,4 @@
+# The MariaDB 11 client verifies server certificates by default, which breaks
+# connections to MySQL servers with self-signed or no TLS certificates.
+[client]
+ssl-verify-server-cert = off
