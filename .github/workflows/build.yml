@@ -1,7 +1,8 @@
 name: Build and Push Docker Image
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest  # Use GitHub-hosted runner
@@ -21,4 +22,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: docker.io/jimbo333/horde-docker:latest
+          tags: docker.io/jimbo333/horde-docker:v6
