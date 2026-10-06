@@ -79,7 +79,8 @@ The base application is served at `/horde/` (requests to `/` are forwarded there
 The `$conf['sql']` connection settings in `horde/conf.php` are rewritten from these variables on every start, so set
 them here rather than in the admin UI. Everything else in `conf.php` is yours to manage, either through
 *Administration → Configuration* or by editing the file. `APACHE_UID`/`APACHE_GID` change the uid/gid of `www-data`
-so it can match the owner of the volume on the host.
+so it can match the owner of the volume on the host. `TZ` (e.g. `-e TZ=America/Phoenix`) also sets PHP's default
+timezone, which Horde uses for users who have not picked their own.
 
 ### Volume expects each application to be in a separate directory
 ```

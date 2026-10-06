@@ -2,6 +2,11 @@
 
 [ "${DEBUG:-}" = "yes" ] && set -x
 
+# PHP ignores TZ, so pass it on as the default timezone
+if [[ -n "$TZ" ]]; then
+    echo "date.timezone = $TZ" > "$PHP_INI_DIR/conf.d/zz-timezone.ini"
+fi
+
 CONFIG_DIR="$HORDE_DIR/var/config"
 CONFIG_DIST=/usr/local/share/horde/config-dist
 CONF_PHP="$CONFIG_DIR/horde/conf.php"
@@ -81,14 +86,18 @@ else
     MYSQL_ARGS+=(--protocol=socket --socket="$DB_SOCKET")
 fi
 
-RESULT=$(mysql "${MYSQL_ARGS[@]}" -e "SHOW DATABASES LIKE '$DB_NAME'")
-if [ "$RESULT" == "$DB_NAME" ]; then
+if ! RESULT=$(mysql "${MYSQL_ARGS[@]}" -e "SHOW DATABASES LIKE '$DB_NAME'"); then
+    echo "Cannot connect to the database server, check the DB_* settings; skipping database setup" >&2
+elif [ "$RESULT" == "$DB_NAME" ]; then
     echo "Database exist"
 else
     echo "Database does not exist"
-    mysql "${MYSQL_ARGS[@]}" -e "CREATE DATABASE \`$DB_NAME\`"
-    horde-db-migrate content && horde-db-migrate
-    echo "Database created"
+    if mysql "${MYSQL_ARGS[@]}" -e "CREATE DATABASE \`$DB_NAME\`" \
+        && horde-db-migrate content && horde-db-migrate; then
+        echo "Database created"
+    else
+        echo "Creating database $DB_NAME failed" >&2
+    fi
 fi
 
 # Fix file/dir permissions
