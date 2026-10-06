@@ -1,0 +1,10 @@
+[Unit]
+Description=Teach SpamAssassin the messages users moved into or out of their Spam folder
+
+[Service]
+Type=oneshot
+User=amavis
+Group=amavis
+# amavisd's SpamAssassin keeps its Bayes database in ~amavis/.spamassassin
+Environment=HOME=/var/spool/amavisd
+ExecStart=/usr/local/bin/sa-learn-spool.sh

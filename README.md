@@ -64,6 +64,12 @@ The base application is served at `/horde/` (requests to `/` are forwarded there
 `/imp/`, `/kronolith/`, `/turba/` and so on. ActiveSync and Autodiscover are still answered at
 `/Microsoft-Server-ActiveSync` and `/autodiscover/autodiscover.xml`.
 
+### Spam reporting
+
+The container has no access to SpamAssassin, so IMP's old `program` reporting (piping to `sa-learn`) does
+not work. If your mail server runs Dovecot, let Dovecot learn whenever a message is moved into or out of the
+Spam folder: see [contrib/spam-learning](contrib/spam-learning/README.md).
+
 ### DB default values
 ```
 -e DB_HOST=localhost
