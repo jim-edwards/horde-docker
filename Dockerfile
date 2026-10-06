@@ -1,8 +1,6 @@
 # Horde 6 is installed with Composer (horde/bundle) and requires PHP >= 8.1
 FROM php:8.3-apache
 
-LABEL maintainer "Cheewai Lai <cheewai.lai@gmail.com>"
-
 ENV HORDE_DIR /var/www/horde
 ENV PATH $HORDE_DIR/vendor/bin:$PATH
 
