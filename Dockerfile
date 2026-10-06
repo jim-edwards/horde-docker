@@ -33,12 +33,12 @@ RUN composer create-project --no-interaction --no-dev horde/bundle . "^1.1" \
 
 COPY php-horde.ini $PHP_INI_DIR/conf.d/horde.ini
 COPY mysql-client.cnf /etc/mysql/mariadb.conf.d/99-horde-client.cnf
-COPY horde-init.sh /usr/local/bin/horde-init.sh
+COPY horde-init.sh horde-alarms-loop.sh /usr/local/bin/
 COPY horde-base-settings.inc /etc/horde-base-settings.inc
 COPY apache-horde.conf /etc/apache2/sites-available/horde.conf
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 
-RUN chmod +x /usr/local/bin/horde-init.sh /docker-entrypoint.sh \
+RUN chmod +x /usr/local/bin/horde-init.sh /usr/local/bin/horde-alarms-loop.sh /docker-entrypoint.sh \
  && cp $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini \
  && a2enmod rewrite \
  && a2dissite 000-default && a2ensite horde

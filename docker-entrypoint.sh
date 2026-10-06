@@ -15,6 +15,9 @@ set -eu
   usermod --uid $APACHE_UID www-data
 }
 
-[ "$1" = 'apache2-foreground' ] && /usr/local/bin/horde-init.sh
+if [ "$1" = 'apache2-foreground' ]; then
+  /usr/local/bin/horde-init.sh
+  /usr/local/bin/horde-alarms-loop.sh &
+fi
 
 exec "$@"

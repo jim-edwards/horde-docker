@@ -88,6 +88,9 @@ them here rather than in the admin UI. Everything else in `conf.php` is yours to
 so it can match the owner of the volume on the host. `TZ` (e.g. `-e TZ=America/Phoenix`) also sets PHP's default
 timezone, which Horde uses for users who have not picked their own.
 
+Reminder e-mails for calendar events and tasks are sent by `horde-alarms`, which the container runs every
+5 minutes by itself. `-e HORDE_ALARMS_INTERVAL=<seconds>` changes the interval, `0` turns it off.
+
 ### Volume expects each application to be in a separate directory
 ```
 -v /path/to/horde/config:/var/www/horde/var/config
