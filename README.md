@@ -1,6 +1,9 @@
 Horde Groupware
 ==============
 
+> This is the Horde 5 image (`v5` branch, `jimbo333/horde-docker:v5`), kept for patches only.
+> The current Horde 6 image is on the `master` branch and published as `jimbo333/horde-docker:v6`.
+
 ### With local Database via Socket-Share
 ```
 docker run --name ts_horde -d \
@@ -11,7 +14,7 @@ docker run --name ts_horde -d \
     -e DB_NAME=[dbpassword] \
     -e DB_USER=[dbpassword] \
     -e DB_PASS=[dbpassword] \
-    jim-edwards/horde-docker
+    jimbo333/horde-docker:v5
 ```
 
 Enter `horde-db-migrate` into an interactive shell on first run if you need a database update.
