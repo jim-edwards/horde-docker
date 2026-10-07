@@ -1,16 +1,16 @@
 # Horde 6 is installed with Composer (horde/bundle) and requires PHP >= 8.1
 FROM php:8.3-apache
 
-ENV HORDE_DIR /var/www/horde
-ENV PATH $HORDE_DIR/vendor/bin:$PATH
+ENV HORDE_DIR=/var/www/horde
+ENV PATH=$HORDE_DIR/vendor/bin:$PATH
 
-ENV DB_HOST localhost
-ENV DB_PORT 3306
-ENV DB_NAME horde
-ENV DB_USER horde
-ENV DB_PASS horde
-ENV DB_PROTOCOL unix
-ENV DB_DRIVER mysqli
+ENV DB_HOST=localhost
+ENV DB_PORT=3306
+ENV DB_NAME=horde
+ENV DB_USER=horde
+ENV DB_PASS=horde
+ENV DB_PROTOCOL=unix
+ENV DB_DRIVER=mysqli
 
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 COPY --from=docker.io/library/composer:2 /usr/bin/composer /usr/bin/composer
