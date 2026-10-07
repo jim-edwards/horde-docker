@@ -1,7 +1,7 @@
 # Pin to bionic because php-horde-* unavailable for 20.04 as at 2020-10-06
 FROM phusion/baseimage:18.04-1.0.0
 
-LABEL maintainer "Cheewai Lai <cheewai.lai@gmail.com>"
+LABEL maintainer="Cheewai Lai <cheewai.lai@gmail.com>"
 
 ARG DOCKERIZE_VERSION=v0.6.1
 #
@@ -9,14 +9,14 @@ ARG DOCKERIZE_VERSION=v0.6.1
 #
 ARG PHP_ETC_DIR=/etc/php/7.2
 
-ENV HOME /root
+ENV HOME=/root
 
-ENV DB_NAME horde
-ENV DB_USER horde
-ENV DB_PASS horde
-ENV DB_PROTOCOL unix
-ENV DB_DRIVER mysqli
-ENV HORDE_TEST_DISABLE false
+ENV DB_NAME=horde
+ENV DB_USER=horde
+ENV DB_PASS=horde
+ENV DB_PROTOCOL=unix
+ENV DB_DRIVER=mysqli
+ENV HORDE_TEST_DISABLE=false
 
 RUN apt-get update
 RUN apt-get install -y apache2 libapache2-mod-php mysql-client gnupg2 openssl php-pear \
