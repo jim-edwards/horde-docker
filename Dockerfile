@@ -31,6 +31,14 @@ RUN composer create-project --no-interaction --no-dev horde/bundle . "^1.1" \
  && mkdir -p /usr/local/share/horde \
  && cp -a var/config /usr/local/share/horde/config-dist
 
+# IMP 7 shows HTML mail in a sandboxed iframe without allow-popups, so links in
+# messages (which IMP opens in a new window) cannot be clicked
+# (https://github.com/horde/imp/issues/23). Scripts and forms stay blocked.
+RUN f=vendor/horde/imp/lib/Mime/Viewer/Html.php \
+ && if grep -q '<iframe sandbox="allow-same-origin"' $f; then \
+	sed -i 's/<iframe sandbox="allow-same-origin"/<iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"/' $f; \
+    else echo "IMP iframe sandbox changed upstream, link patch not applied"; fi
+
 COPY php-horde.ini $PHP_INI_DIR/conf.d/horde.ini
 COPY mysql-client.cnf /etc/mysql/mariadb.conf.d/99-horde-client.cnf
 COPY horde-init.sh horde-alarms-loop.sh /usr/local/bin/
