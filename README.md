@@ -8,6 +8,7 @@ on PHP 8.3 and Apache.
 > Upgrading an existing Horde 5 container? Read [Upgrading from Horde 5](#upgrading-from-horde-5) first.
 > The config volume moved, and the database schema upgrade can't be undone.
 > The Horde 5 image is still available as `jimbo333/horde-docker:v5`, built from the `v5` branch.
+> `jimbo333/horde-docker:latest` is the same as `:v6`.
 
 ### With local Database via Socket-Share
 ```
