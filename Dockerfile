@@ -16,9 +16,16 @@ ENV DB_DRIVER=mysqli
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 COPY --from=docker.io/library/composer:2 /usr/bin/composer /usr/bin/composer
 
+# imagick, memcached and lzf are built from their GitHub sources instead of
+# PECL, whose downloads were failing (same versions: imagick 3.8.1,
+# memcached 3.4.0, lzf 1.7.0 = commit dd5a534a97ee)
 RUN apt-get update \
  && apt-get install -y --no-install-recommends git unzip mariadb-client gnupg aspell aspell-en \
- && install-php-extensions mysqli pdo_mysql intl gd imagick zip ldap gettext bcmath opcache memcached lzf \
+ && for i in 1 2 3 4 5; do \
+	install-php-extensions mysqli pdo_mysql intl gd Imagick/imagick@3.8.1 zip ldap gettext bcmath opcache \
+		php-memcached-dev/php-memcached@v3.4.0 php/pecl-file_formats-lzf@dd5a534a97ee && break; \
+	[ "$i" = 5 ] && exit 1; echo "install-php-extensions failed, retrying in 60s"; sleep 60; \
+    done \
  && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Groupware apps (horde, kronolith, turba, nag, mnemo) plus webmail, filters, password changing and ActiveSync
