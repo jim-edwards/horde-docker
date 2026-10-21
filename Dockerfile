@@ -1,5 +1,6 @@
 # Horde 6 is installed with Composer (horde/bundle) and requires PHP >= 8.1
-FROM php:8.3-apache
+# Pinned to the patch release; bump for PHP security fixes (8.3.36: CVE-2026-109618, CVE-2026-109619)
+FROM php:8.3.36-apache
 
 ENV HORDE_DIR=/var/www/horde
 ENV PATH=$HORDE_DIR/vendor/bin:$PATH
