@@ -35,6 +35,17 @@ if ! grep -qE "^\\\$conf\['secret_key'\] = '.+';" "$CONF_PHP"; then
     printf "\n\$conf['secret_key'] = '%s';\n" "$(php -r 'echo bin2hex(random_bytes(32));')" >> "$CONF_PHP"
 fi
 
+# With $conf['session']['timeout'] = 0 (session ends when the browser closes)
+# Horde leaves PHP's session.gc_maxlifetime at its 24 minute default, so PHP
+# deletes sessions idle for longer than that. Keep them for the configured
+# maximum session time instead (24 hours if that is unlimited).
+SESSION_LIFETIME=$(php -r '$_SERVER["SERVER_NAME"] = "localhost"; include $argv[1]; echo (int) ($conf["session"]["max_time"] ?? 0);' "$CONF_PHP" 2>/dev/null)
+if ! [[ "$SESSION_LIFETIME" =~ ^[0-9]+$ ]] || (( SESSION_LIFETIME == 0 )); then
+    SESSION_LIFETIME=86400
+fi
+(( SESSION_LIFETIME < 1440 )) && SESSION_LIFETIME=1440
+echo "session.gc_maxlifetime = $SESSION_LIFETIME" > "$PHP_INI_DIR/conf.d/zz-session.ini"
+
 # conf.php.dist has no share driver until the config is saved in the admin UI, and the
 # Kronolith schema migration fails without one. Use Horde's default.
 if ! grep -q "^\$conf\['share'\]\['driver'\]" "$CONF_PHP"; then
