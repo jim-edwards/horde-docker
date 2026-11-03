@@ -2,26 +2,137 @@ name: Build and Push Docker Image
 on:
   push:
     branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  schedule:
+    # Weekly rebuild. It picks up new Debian, Horde and Composer releases without a change to the repo.
+    - cron: "17 5 * * 0"
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  IMAGE: docker.io/jimbo333/horde-docker
+  TAG: v6
+
 jobs:
-  build:
-    runs-on: ubuntu-latest  # Use GitHub-hosted runner
+  scripts:
+    name: Tests for the scripts in ci/
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Run the tests
+        run: python3 -m unittest discover -s ci -v
+
+  image:
+    name: Build, test, scan and publish
+    runs-on: ubuntu-latest
+    outputs:
+      scanned: ${{ steps.upload.outcome == 'success' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Build
+        run: docker build --pull --tag horde-candidate .
+
+      - name: Cache the Trivy vulnerability database
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ github.run_id }}
+          restore-keys: trivy-db-
+
+      # Starts the image against an empty MariaDB and checks it, then scans it. A build that fails the smoke test
+      # stops here and is not published.
+      - name: Smoke test and scan
+        run: ci/verify-image.sh horde-candidate
+
+      - name: Keep the scan results
+        id: upload
+        if: always() && hashFiles('reports/trivy.json') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: scan-results
+          path: reports/
+          retention-days: 30
+
       - name: Log in to Registry
+        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
         uses: docker/login-action@v4
         with:
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v7
+      # The image that was tested is the one that is pushed. The dated tag is the way back if a rebuild turns out bad.
+      - name: Push
+        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+        run: |
+          for tag in "$TAG-$(date -u +%Y%m%d)" "$TAG" latest; do
+            docker tag horde-candidate "$IMAGE:$tag"
+            docker push "$IMAGE:$tag"
+          done
+
+  report:
+    name: Vulnerability report
+    needs: image
+    if: always() && needs.image.outputs.scanned == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Get the scan results
+        uses: actions/download-artifact@v8
         with:
-          context: .
-          push: true
-          tags: |
-            docker.io/jimbo333/horde-docker:v6
-            docker.io/jimbo333/horde-docker:latest
+          name: scan-results
+          path: reports/
+
+      # Pull requests only get the report in the job summary. Everything else also opens, updates or closes the
+      # security issue. A run that finds alerts it cannot put in an issue fails, so that GitHub e-mails you.
+      - name: Report
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
+        run: >
+          python3 ci/security_report.py
+          --trivy reports/trivy.json --composer reports/composer-audit.json --php-version reports/php-version.txt
+          ${{ github.event_name != 'pull_request' && '--notify' || '' }}
+
+  # Dependabot proposes patch releases of the PHP image, and this merges them once they have built and passed the
+  # smoke test. A merge made with the workflow token does not start the push workflow, so it is started by hand.
+  automerge:
+    name: Merge Dependabot patch updates
+    needs: image
+    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - name: Look at the update
+        id: metadata
+        uses: dependabot/fetch-metadata@v3
+        with:
+          github-token: ${{ github.token }}
+
+      - name: Merge and publish
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          gh pr merge --squash --delete-branch "$PR_URL"
+          gh workflow run build.yml --repo "$GITHUB_REPOSITORY" --ref "${{ github.event.repository.default_branch }}"

@@ -1,0 +1,26 @@
+version: 2
+updates:
+  # FROM php:8.3.x-apache and the composer image in the Dockerfile
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: daily
+    ignore:
+      # Horde is moved to a new PHP branch by hand, so only offer patch releases of 8.3. These carry the PHP
+      # security fixes, and build.yml merges them once the image builds and passes the smoke test.
+      - dependency-name: php
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  # Trivy and MariaDB, which ci/verify-image.sh runs
+  - package-ecosystem: docker
+    directory: /ci/tools
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: mariadb
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

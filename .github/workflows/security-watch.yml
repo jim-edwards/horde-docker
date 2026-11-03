@@ -1,0 +1,59 @@
+name: Watch for new vulnerabilities
+# CVEs are published after an image was built, so scan the image that is published, every day, and
+# - tell you about new ones (an issue labelled security-alert, plus NOTIFY_WEBHOOK_URL if you set that secret)
+# - start a rebuild if that would fix them
+on:
+  schedule:
+    - cron: "41 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-watch
+
+env:
+  IMAGE: docker.io/jimbo333/horde-docker:v6
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      actions: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Cache the Trivy vulnerability database
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ github.run_id }}
+          restore-keys: trivy-db-
+
+      - name: Pull the published image
+        run: docker pull "$IMAGE"
+
+      - name: Scan
+        run: ci/verify-image.sh --scan-only "$IMAGE"
+
+      - name: Keep the scan results
+        if: always() && hashFiles('reports/trivy.json') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: scan-results
+          path: reports/
+          retention-days: 30
+
+      - name: Report
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
+        run: >
+          python3 ci/security_report.py
+          --trivy reports/trivy.json --composer reports/composer-audit.json --php-version reports/php-version.txt
+          --notify --remediate

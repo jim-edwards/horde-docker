@@ -9,6 +9,9 @@ on PHP 8.3 and Apache.
 > The config volume moved, and the database schema upgrade can't be undone.
 > The Horde 5 image is still available as `jimbo333/horde-docker:v5`, built from the `v5` branch.
 > `jimbo333/horde-docker:latest` is the same as `:v6`.
+> Each build of `:v6` is also tagged with its date (`jimbo333/horde-docker:v6-YYYYMMDD`), in case you need to pin an
+> exact build or go back to the previous one. How the image is rebuilt and kept patched is described in
+> [ci/README.md](ci/README.md).
 
 ### With local Database via Socket-Share
 ```

@@ -1,5 +1,6 @@
 # Horde 6 is installed with Composer (horde/bundle) and requires PHP >= 8.1
-# Pinned to the patch release; bump for PHP security fixes (8.3.36: CVE-2026-109618, CVE-2026-109619)
+# Pinned to the patch release, which Dependabot bumps when PHP publishes a new one (see .github/dependabot.yml).
+# 8.3.36 fixes CVE-2026-109618 and CVE-2026-109619.
 FROM php:8.3.36-apache
 
 ENV HORDE_DIR=/var/www/horde
@@ -19,7 +20,10 @@ COPY --from=docker.io/library/composer:2 /usr/bin/composer /usr/bin/composer
 # imagick, memcached and lzf are built from their GitHub sources instead of
 # PECL, whose downloads were failing (same versions: imagick 3.8.1,
 # memcached 3.4.0, lzf 1.7.0 = commit dd5a534a97ee)
+
+# apt-get upgrade applies the Debian security fixes released since the base image was built
 RUN apt-get update \
+ && apt-get upgrade -y --no-install-recommends \
  && apt-get install -y --no-install-recommends git unzip mariadb-client gnupg aspell aspell-en \
  && for i in 1 2 3 4 5; do \
 	install-php-extensions mysqli pdo_mysql intl gd Imagick/imagick@3.8.1 zip ldap gettext bcmath opcache \

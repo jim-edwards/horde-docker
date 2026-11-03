@@ -1,0 +1,7 @@
+# Vulnerabilities that were looked at and accepted for this image. Both Trivy and
+# ci/security_report.py skip the IDs listed here, so they stop raising alerts.
+# One ID per line. Give the reason on the line above, and an expiry date so the
+# decision is revisited:
+#
+# Kernel headers only, a container has no kernel
+# CVE-2026-12345 exp:2027-03-31
