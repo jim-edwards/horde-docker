@@ -51,6 +51,15 @@ RUN f=vendor/horde/imp/lib/Mime/Viewer/Html.php \
 	sed -i 's/<iframe sandbox="allow-same-origin"/<iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"/' $f; \
     else echo "IMP iframe sandbox changed upstream, link patch not applied"; fi
 
+# Horde_Serialize retries a failed JSON encode after a forced UTF-8 -> UTF-8
+# conversion to drop invalid bytes, but Horde_String 3 returns early when both
+# charsets match, so a message with bad bytes in its body or subject makes
+# reply/forward die with "Serialization failed." Substitute U+FFFD instead.
+RUN f=vendor/horde/serialize/lib/Horde/Serialize.php \
+ && if grep -q "json_encode(Horde_String::convertCharset(\$data, \$params, 'UTF-8', true));" $f; then \
+	sed -i "s/json_encode(Horde_String::convertCharset(\$data, \$params, 'UTF-8', true));/json_encode(Horde_String::convertCharset(\$data, \$params, 'UTF-8', true), JSON_INVALID_UTF8_SUBSTITUTE);/" $f; \
+    else echo "Horde_Serialize JSON fallback changed upstream, UTF-8 patch not applied"; fi
+
 COPY php-horde.ini $PHP_INI_DIR/conf.d/horde.ini
 COPY mysql-client.cnf /etc/mysql/mariadb.conf.d/99-horde-client.cnf
 COPY horde-init.sh horde-alarms-loop.sh /usr/local/bin/
